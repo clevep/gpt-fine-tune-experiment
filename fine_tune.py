@@ -12,41 +12,26 @@ MODEL = os.environ.get('OPENAI_MODEL', 'gpt-3.5-turbo-0613')
 current_directory = os.path.dirname(os.path.abspath(__file__))
 
 # Join the directory with the new filename
-DEFAULT_FILE_PATH = os.path.join(current_directory, "fine_tune_data.json")
+DEFAULT_FILE_PATH = os.path.join(current_directory, "fine_tune_data.jsonl")
 
 openai_client = openai.OpenAI()
 
 
 def upload_file(file_path=DEFAULT_FILE_PATH):
-    # Set the request headers and data
-    headers = {
-        "Authorization": f"Bearer {OPENAI_API_KEY}"
-    }
-    data = {
-        "purpose": "fine-tune"
-    }
-    files = {
-        "file": open(file_path, "rb")
-    }
-    # Make the API request
-    response = requests.post("https://api.openai.com/v1/files", headers=headers, data=data, files=files)
-    return response.json()['id']
+    ## Make the API request
+    response = openai_client.files.create(
+        file=open(file_path, "rb"),
+        purpose="fine-tune"
+    )
+    return response.id
 
 
 def create_fine_tune_job(file_id):
-    # Set the request headers and data
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {OPENAI_API_KEY}",
-    }
-    data = {
-        "training_file": file_id,
-        "model": MODEL,
-    }
-
-    # Make the API request
-    response = requests.post("https://api.openai.com/v1/fine_tuning/jobs", headers=headers, json=data)
-    print(response.json())
+    response = openai_client.fine_tuning.jobs.create(
+        training_file=file_id,
+        model=MODEL
+    )
+    print(response)
 
 
 def query_fine_tune_model(fine_tune_model_name, system_prompt=None, user_prompt=None):
